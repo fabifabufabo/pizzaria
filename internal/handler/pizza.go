@@ -2,6 +2,7 @@ package handler
 
 import (
 	"pizzaria/internal/models"
+	"pizzaria/internal/service"
 	"strconv"
 
 	"pizzaria/internal/data"
@@ -19,9 +20,17 @@ func PostPizzas(c *gin.Context) {
 	var newPizza models.Pizza
 	if err := c.ShouldBindJSON(&newPizza); err != nil {
 		c.JSON(400, gin.H{
-			"erro": "Algo deu errado :(",
+			"error": "Algo deu errado :(",
 		})
 	}
+
+	if err := service.ValidatePizzaPrice(&newPizza); err != nil {
+		c.JSON(401, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	newPizza.ID = len(data.Pizzas) + 1
 	data.Pizzas = append(data.Pizzas, newPizza)
 	data.SavePizza()
@@ -89,6 +98,13 @@ func UpdatePizzaByID(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&updatedPizza); err != nil {
 		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if err := service.ValidatePizzaPrice(&updatedPizza); err != nil {
+		c.JSON(401, gin.H{
 			"error": err.Error(),
 		})
 		return
